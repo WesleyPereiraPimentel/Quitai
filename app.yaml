@@ -1,0 +1,13 @@
+runtime: python311
+entrypoint: gunicorn -b :$PORT app:app
+
+# Serve static files efficiently
+handlers:
+- url: /static
+  static_dir: static
+
+- url: /.*
+  script: auto
+
+env_variables:
+  FLASK_ENV: production

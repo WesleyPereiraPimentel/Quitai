@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard do Conciliador - Quitaí</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header id="mainHeader" class="hero-navbar scrolled rounded-bottom-4 shadow-sm mb-4">
+    <nav class="navbar navbar-dark py-3">
+        <div class="container">
+            <!-- A soma das colunas MD (3 + 6 + 3) resulta perfeitamente nos 12 espaços do Bootstrap -->
+            <div class="row w-100 align-items-center m-0">
+                
+                <!-- Imagem no Início (Esquerda - TJES) -->
+                <div class="col-12 col-md-3 text-center text-md-start mb-3 mb-md-0 px-0">
+                    <a href="https://www.tjes.jus.br/" target="_blank" title="Acessar site do TJES">
+                        <img src="https://www.tjes.jus.br/wp-content/uploads/TJES.png" 
+                             alt="Logo do Tribunal de Justiça do Espírito Santo" 
+                             style="height: 65px; width: auto; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">
+                    </a>
+                </div>
+
+                <!-- Textos Centralizados no Meio -->
+                <div class="col-12 col-md-6 text-center px-0 mb-3 mb-md-0">
+                    <h1 class="fw-bold text-white text-shadow-sm fs-4 mb-1">
+                        Portal de Solução Consensual de Conflitos
+                    </h1>
+                    <p class="text-white text-opacity-75 mb-0 fs-5 fw-medium">
+                        Quitaí - Conciliador
+                    </p>
+                </div>
+
+                <!-- Imagem no Final (Direita - TJRS) -->
+                <div class="col-12 col-md-3 text-center text-md-end px-0">
+                    <a href="https://www.tjrs.jus.br/novo/" target="_blank" title="Acessar site do TJRS">
+                        <img src="https://www.tjrs.jus.br/novo/wp-content/themes/tjrs/images/img/logoCuiasTJRS.png" 
+                             alt="Logo do Tribunal de Justiça do Rio Grande do Sul" 
+                             style="height: 65px; width: auto; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+</header>
+
+    <main class="container py-4">
+        <!-- PAINEL DE ESTATÍSTICAS -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3"><div class="dashboard-stat-card"><div class="stat-icon icon-blue"><i class="fa-solid fa-folder-open"></i></div><div class="stat-info"><div class="stat-label">Total de Casos</div><div class="stat-value">{{ solicitacoes|length }}</div></div></div></div>
+            <div class="col-md-3"><div class="dashboard-stat-card"><div class="stat-icon icon-yellow"><i class="fa-solid fa-hourglass-half"></i></div><div class="stat-info"><div class="stat-label">Aguardando Análise</div><div class="stat-value">{{ solicitacoes.values()|selectattr('status_geral', 'equalto', 'Aguardando Validação')|list|length }}</div></div></div></div>
+            <div class="col-md-3"><div class="dashboard-stat-card"><div class="stat-icon icon-green"><i class="fa-solid fa-check-double"></i></div><div class="stat-info"><div class="stat-label">Casos Aprovados</div><div class="stat-value">0</div></div></div></div>
+            <div class="col-md-3"><div class="dashboard-stat-card"><div class="stat-icon icon-red"><i class="fa-solid fa-gavel"></i></div><div class="stat-info"><div class="stat-label">Valor em Disputa</div><div class="stat-value">R$ {{ solicitacoes.values()|sum(attribute='dados_cidadao.total_dividas')|round(0)|int|string|replace(',', '.') }}</div></div></div></div>
+        </div>
+
+        <!-- TABELA DE SOLICITAÇÕES -->
+        <div class="content-panel">
+            <div class="panel-header"><h2><i class="fa-solid fa-list-ul"></i> Solicitações de Conciliação</h2><p>Lista de todas as solicitações de superendividamento submetidas.</p></div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Protocolo</th><th>Data</th><th>Solicitante</th><th>Renda Ind.</th><th>Dívida Total</th><th>Status IA</th><th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for id, solicitacao in solicitacoes.items() %}
+                        <tr>
+                            <td class="font-monospace">{{ solicitacao.protocolo }}</td>
+                            <td>{{ solicitacao.data_solicitacao }}</td>
+                            <td>{{ solicitacao.dados_cidadao.nome }}</td>
+                            <td class="value-income">R$ {{ "%.2f"|format(solicitacao.dados_cidadao.renda_individual|float) }}</td>
+                            <td class="value-deduction">R$ {{ "%.2f"|format(solicitacao.dados_cidadao.total_dividas|float) }}</td>
+                            <td>
+                                {% if solicitacao.analise_ia.agente_5.dados.aprovado_motor %}
+                                    <span class="status-badge status-badge-approved">Aprovado</span>
+                                {% else %}
+                                    <span class="status-badge status-badge-waiting">Revisão</span>
+                                {% endif %}
+                            </td>
+                            <td><button class="btn btn-primary" style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;" onclick="abrirModalAnalise('{{ solicitacao.protocolo }}')">Analisar</button></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center text-muted" style="padding: 2rem;">Nenhuma solicitação encontrada.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL DE ANÁLISE DETALHADA -->
+    <div id="modalAnalise" class="modal-backdrop d-none">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div><h3 class="modal-title">Dossiê da Análise de I.A.</h3><p id="modalProtocolo" class="modal-subtitle">Protocolo: ...</p></div>
+                <button onclick="fecharModalAnalise()" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-md-6"><div class="dossie-card"><div class="dossie-card-header"><i class="fa-solid fa-user-check"></i> Agente 1: Perfil Socioeconômico</div><div id="agente1-content" class="dossie-card-body"></div></div></div>
+                    <div class="col-md-6"><div class="dossie-card"><div class="dossie-card-header"><i class="fa-solid fa-brain"></i> Agente 5: Motor de Inferência</div><div id="agente5-content" class="dossie-card-body"></div></div></div>
+                </div>
+                <div class="dossie-card"><div class="dossie-card-header"><i class="fa-solid fa-gavel"></i> Agentes 2 & 3: Processos Judiciais e Extração</div><div id="agente2-content" class="dossie-card-body"></div></div>
+                <div class="dossie-card"><div class="dossie-card-header"><i class="fa-solid fa-handshake-simple"></i> Agente 4: Mapeamento de Precedentes de Acordo</div><div id="agente4-content" class="dossie-card-body"></div></div>
+                <div class="dossie-card card-highlight"><div class="dossie-card-header"><i class="fa-solid fa-file-signature"></i> Agente 6: Minuta e Recomendação Final</div><div id="agente6-content" class="dossie-card-body"></div></div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="fecharModalAnalise()" class="btn btn-light">Fechar</button>
+                <button class="btn btn-success"><i class="fa-solid fa-check"></i> Aprovar e Encaminhar</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-4 mt-4"><p style="font-size: 0.8rem; color: var(--app-text-secondary);">Poder Judiciário - Sistema Quitaí</p></footer>
+    
+    <script>
+        // MOCK_DATABASE é injetado pelo Flask/Jinja2 no template
+        const MOCK_DATABASE = {{ solicitacoes | tojson | safe }};
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const MOCK_DATABASE = {{ solicitacoes | tojson | safe }};
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

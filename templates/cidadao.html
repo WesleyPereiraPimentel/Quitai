@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Quitaí - Solução de Conflitos e Superendividamento - Poder Judiciário</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header id="mainHeader" class="hero-navbar scrolled rounded-bottom-4 shadow-sm mb-4">
+    <nav class="navbar navbar-dark py-3">
+        <div class="container">
+            <!-- A soma das colunas MD (3 + 6 + 3) resulta perfeitamente nos 12 espaços do Bootstrap -->
+            <div class="row w-100 align-items-center m-0">
+                
+                <!-- Imagem no Início (Esquerda - TJES) -->
+                <div class="col-12 col-md-3 text-center text-md-start mb-3 mb-md-0 px-0">
+                    <a href="https://www.tjes.jus.br/" target="_blank" title="Acessar site do TJES">
+                        <img src="https://www.tjes.jus.br/wp-content/uploads/TJES.png" 
+                             alt="Logo do Tribunal de Justiça do Espírito Santo" 
+                             style="height: 65px; width: auto; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">
+                    </a>
+                </div>
+
+                <!-- Textos Centralizados no Meio -->
+                <div class="col-12 col-md-6 text-center px-0 mb-3 mb-md-0">
+                    <h1 class="fw-bold text-white text-shadow-sm fs-4 mb-1">
+                        Portal de Solução Consensual de Conflitos
+                    </h1>
+                    <p class="text-white text-opacity-75 mb-0 fs-5 fw-medium">
+                        Quitaí
+                    </p>
+                </div>
+
+                <!-- Imagem no Final (Direita - TJRS) -->
+                <div class="col-12 col-md-3 text-center text-md-end px-0">
+                    <a href="https://www.tjrs.jus.br/novo/" target="_blank" title="Acessar site do TJRS">
+                        <img src="https://www.tjrs.jus.br/novo/wp-content/themes/tjrs/images/img/logoCuiasTJRS.png" 
+                             alt="Logo do Tribunal de Justiça do Rio Grande do Sul" 
+                             style="height: 65px; width: auto; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+</header>
+<!-- Botões para troca de ambientes
+-> Ambiente do Devedor: http://127.0.0.1:5000
+ -> Dashboard do TJES:   http://127.0.0.1:5000/tjes/dashboard
+ -> Consulta de Protocolo: http://127.0.0.1:5000/consulta" -->
+<div class="alert alert-info text-center mb-0 rounded-0" role="alert">
+    <strong>Ambiente de Testes:</strong> Este é um ambiente de teste do
+    <strong>Portal Quitaí</strong>. Para acessar o <strong>Dashboard do TJES</strong>, clique <a href="http://127.0.0.1:5000/tjes/dashboard" target="_blank">aqui</a>.
+    <strong>Para consultar protocolos de atendimento</strong>, clique <a href="http://127.0.0.1:5000/consulta" target="_blank">aqui</a>.
+</div>
+    <main class="container py-4">
+        <div class="tabs-container mb-4">
+            <div class="d-flex" id="tabsHeader">
+                <button type="button" onclick="switchTab(1)" id="tab-btn-1" class="tab-btn active"><i class="fa-solid fa-handshake"></i><span>1. Triagem</span></button>
+                <button type="button" onclick="switchTab(2)" id="tab-btn-2" class="tab-btn"><i class="fa-solid fa-address-card"></i><span>2. Identificação</span></button>
+                <button type="button" onclick="switchTab(3)" id="tab-btn-3" class="tab-btn"><i class="fa-solid fa-coins"></i><span>3. Socioeconômico</span></button>
+                <button type="button" onclick="switchTab(4)" id="tab-btn-4" class="tab-btn"><i class="fa-solid fa-file-invoice-dollar"></i><span>4. Credores</span></button>
+                <button type="button" onclick="switchTab(5)" id="tab-btn-5" class="tab-btn"><i class="fa-solid fa-check-double"></i><span>5. Revisar</span></button>
+            </div>
+        </div>
+
+        <form id="methisForm" onsubmit="submeterFormulario(event)">
+            <!-- ABA 1 — TRIAGEM -->
+            <div id="tab-content-1" class="tab-content content-panel">
+                <div class="panel-header"><h2><i class="fa-solid fa-sliders"></i>Etapa 1 — Triagem e Unidade de Atendimento</h2><p>Escolha o CEJUSC e o tipo de procedimento desejado.</p></div>
+                <div class="panel-body"><div class="row g-4">
+                    <div class="col-md-6"><label class="form-label" for="cejusc">Selecione o CEJUSC *</label><select id="cejusc" class="form-select" required><option value="vitoria">CEJUSC Vitória - Foro Central</option><option value="vila_velha">CEJUSC Vila Velha</option><option value="cariacica">CEJUSC Cariacica</option><option value="serra">CEJUSC Serra</option><option value="60plus">CEJUSC 60+ (Idoso)</option><option value="online">CEJUSC On-line do Cidadão</option></select></div>
+                    <div class="col-md-6"><label class="form-label" for="tipo_atendimento">Tipo de Atendimento *</label><select id="tipo_atendimento" class="form-select" required><option value="superendividamento">Superendividamento (Lei 14.181/2021)</option><option value="conciliacao_civel">Conciliação / Mediação Cível Geral</option><option value="mediacao_familiar">Mediação Familiar</option><option value="empresarial">Mediação Empresarial (PJ)</option></select></div>
+                    <div class="col-md-6"><label class="form-label" for="assunto">Assunto Principal *</label><select id="assunto" class="form-select" required><option value="renegociacao_bloco">Renegociação de Dívidas em Bloco</option><option value="revisao_contrato">Revisão de Contratos de Consumo</option><option value="cartao_consignado">Cartão de Crédito Consignado</option><option value="superendividamento_grave">Risco de Subsistência</option></select></div>
+                    <div class="col-md-6"><label class="form-label">Modalidade da Sessão</label><div class="d-flex align-items-center gap-4 mt-2"><label class="form-check"><input type="radio" name="modalidade" value="virtual" checked class="form-check-input"><span class="form-check-label">Sessão Virtual</span></label><label class="form-check"><input type="radio" name="modalidade" value="presencial" class="form-check-input"><span class="form-check-label">Presencial no CEJUSC</span></label></div></div>
+                </div></div>
+                <div class="panel-footer panel-footer-between">
+                    <div></div>
+                    <button type="button" onclick="switchTab(2)" class="btn btn-primary btn-lg px-4 shadow-sm sequence-btn">Identificação <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                </div>
+            </div>
+
+            <!-- ABA 2 — IDENTIFICAÇÃO -->
+            <div id="tab-content-2" class="tab-content content-panel d-none">
+                <div class="panel-header"><h2><i class="fa-solid fa-user"></i>Etapa 2 — Identificação do Solicitante</h2><p>Preencha os dados de identificação e contato do requerente.</p></div>
+                <div class="panel-body"><div class="row g-4 mt-1">
+                    <div class="col-md-8"><label class="form-label fw-bold" for="nome">Nome Completo *</label><input type="text" id="nome" value="Carlos Eduardo da Silva" required class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="cpf">CPF *</label><input type="text" id="cpf" value="123.456.789-00" required class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="rg">RG / Órgão Emissor</label><input type="text" id="rg" value="2.145.890 SSP/ES" class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="data_nascimento">Data de Nascimento</label><input type="date" id="data_nascimento" value="1982-06-14" class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="sexo">Sexo</label><select id="sexo" class="form-select form-select-lg shadow-sm"><option value="M">Masculino</option><option value="F">Feminino</option><option value="I">Intersexo</option></select></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="estado_civil">Estado Civil</label><select id="estado_civil" class="form-select form-select-lg shadow-sm"><option value="casado">Casado(a)</option><option value="solteiro" selected>Solteiro(a)</option><option value="divorciado">Divorciado(a)</option><option value="viuvo">Viúvo(a)</option><option value="convivente">União Estável</option></select></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="profissao">Profissão / Situação</label><input type="text" id="profissao" value="Auxiliar Administrativo" class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="status_emprego">Situação de Emprego</label><select id="status_emprego" class="form-select form-select-lg shadow-sm"><option value="ativa" selected>Emprego Ativo</option><option value="aposentado">Aposentado / Pensionista</option><option value="desempregado">Desempregado</option><option value="MEI">Microempreendedor Individual (MEI)</option></select></div>
+                    
+                    <div class="col-12 mt-4 mb-2"><h4 class="fw-bold text-primary border-bottom pb-2">Contato e Endereço</h4></div>
+                    
+                    <div class="col-md-4"><label class="form-label fw-bold" for="telefone">Telefone / WhatsApp *</label><input type="text" id="telefone" value="(27) 99887-6655" required class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-8"><label class="form-label fw-bold" for="email">E-mail para Notificações *</label><input type="email" id="email" value="carlos.silva@email.com" required class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-3"><label class="form-label fw-bold" for="cep">CEP</label><input type="text" id="cep" value="29000-000" placeholder="00000-000" onblur="buscarCEP(this.value)" class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-6"><label class="form-label fw-bold" for="logradouro">Logradouro</label><input type="text" id="logradouro" class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-3"><label class="form-label fw-bold" for="numero">Número</label><input type="text" id="numero" class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="complemento">Complemento</label><input type="text" id="complemento" class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="bairro">Bairro</label><input type="text" id="bairro" class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-md-4"><label class="form-label fw-bold" for="cidade_uf">Cidade / UF</label><input type="text" id="cidade_uf" class="form-control form-control-lg shadow-sm"></div>
+                    <div class="col-12"><label class="form-label fw-bold" for="endereco">Endereço Residencial Completo</label><input type="text" id="endereco" value="Rua das Palmeiras, nº 140, Apto 302, Bairro Bento Ferreira, Vitória - ES" class="form-control form-control-lg shadow-sm" readonly style="background-color: #e9ecef;"></div>
+                </div></div>
+                <div class="panel-footer panel-footer-between mt-4">
+                    <button type="button" onclick="switchTab(1)" class="btn btn-light btn-lg shadow-sm sequence-btn-back"><i class="fa-solid fa-arrow-left me-2"></i> Anterior</button>
+                    <button type="button" onclick="switchTab(3)" class="btn btn-primary btn-lg px-4 shadow-sm sequence-btn">Socioeconômico <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                </div>
+            </div>
+
+            <!-- ABA 3 — SOCIOECONÔMICO -->
+            <div id="tab-content-3" class="tab-content content-panel d-none">
+                <div class="panel-header"><h2><i class="fa-solid fa-calculator"></i>Etapa 3 — Ficha Socioeconômica</h2><p>Conforme formulário oficial do Projeto-Piloto de Superendividamento.</p></div>
+                <div class="panel-body">
+                    <div class="section-box"><h3 class="section-box-title">1. Renda e Núcleo Familiar</h3><div class="row g-4">
+                        <div class="col-md-3"><label class="form-label">Renda Individual (R$) *</label><input type="number" id="renda_individual" value="2800" oninput="calcularTotalDespesas()" class="form-control"></div>
+                        <div class="col-md-3"><label class="form-label">Renda Familiar (R$) *</label><input type="number" id="renda_familiar" value="3500" class="form-control"></div>
+                        <div class="col-md-3"><label class="form-label">Nº de Dependentes *</label><input type="number" id="dependentes" value="3" class="form-control"></div>
+                        <div class="col-md-3"><label class="form-label">Possui Casa Própria?</label><select id="casa_propria" class="form-select"><option value="nao">Não (Alugado / Cedido)</option><option value="sim">Sim</option></select></div>
+                    </div></div>
+                    <div class="section-box">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="section-box-title" style="margin-bottom: 0;">2. Despesas Mensais (R$)</h3>
+                            <span class="badge bg-primary rounded-pill fs-6">Total: R$ <span id="lblTotalDespesas">2.450,00</span></span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-3"><label class="form-label">Luz</label><input type="number" id="desp_luz" value="180" class="form-control despesa-input"></div>
+                            <div class="col-md-3"><label class="form-label">Água</label><input type="number" id="desp_agua" value="70" class="form-control despesa-input"></div>
+                            <div class="col-md-3"><label class="form-label">Aluguel / Condomínio</label><input type="number" id="desp_aluguel" value="950" class="form-control despesa-input"></div>
+                            <div class="col-md-3"><label class="form-label">Telefone / Internet</label><input type="number" id="desp_telefone" value="120" class="form-control despesa-input"></div>
+                            <div class="col-md-3"><label class="form-label">Alimentação</label><input type="number" id="desp_alimentacao" value="650" class="form-control despesa-input"></div>
+                            <div class="col-md-3"><label class="form-label">Pensão Alimentícia</label><input type="number" id="desp_pensao" value="0" class="form-control despesa-input"></div>
+                            <div class="col-md-3"><label class="form-label">Educação</label><input type="number" id="desp_educacao" value="200" class="form-control despesa-input"></div>
+                            <div class="col-md-3"><label class="form-label">Plano de Saúde</label><input type="number" id="desp_saude" value="180" class="form-control despesa-input"></div>
+                            <div class="col-md-3"><label class="form-label">Medicamentos</label><input type="number" id="desp_medicamentos" value="100" class="form-control despesa-input"></div>
+                            <div class="col-md-3"><label class="form-label">Outras Despesas</label><input type="number" id="desp_outras" value="0" class="form-control despesa-input"></div>
+                        </div>
+                    </div>
+                     <div class="row g-4">
+                        <div class="col-md-6"><div class="section-box" style="margin-bottom:0; height: 100%;"><h3 class="section-box-title">Causas das Dívidas *</h3>
+                            <div class="d-flex flex-column gap-3">
+                                <label class="form-check"><input type="checkbox" name="causa_divida" value="jogos_azar" checked class="form-check-input"><span>Jogos de azar (Bets, etc.)</span></label>
+                                <label class="form-check"><input type="checkbox" name="causa_divida" value="gastos" checked class="form-check-input"><span>Gastou mais do que ganha</span></label>
+                                <label class="form-check"><input type="checkbox" name="causa_divida" value="desemprego" class="form-check-input"><span>Desemprego</span></label>
+                                <label class="form-check"><input type="checkbox" name="causa_divida" value="divorcio" class="form-check-input"><span>Divórcio / Separação</span></label>
+                                <label class="form-check"><input type="checkbox" name="causa_divida" value="doenca" checked class="form-check-input"><span>Doença pessoal ou na família</span></label>
+                                <label class="form-check"><input type="checkbox" name="causa_divida" value="reducao_renda" class="form-check-input"><span>Redução de renda</span></label>
+                            </div>
+                        </div></div>
+                        <div class="col-md-6"><div class="section-box" style="margin-bottom:0; height: 100%;"><h3 class="section-box-title">Situação de Cadastro e Crédito</h3><div class="d-flex flex-column gap-4">
+                            <div><label class="form-label">Registrado em cadastros de inadimplentes (SPC/Serasa)?</label><select id="cadastros_inadimplentes" class="form-select"><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="form-label">Como tomou conhecimento do crédito?</label><select id="origem_credito" class="form-select"><option value="meio_eletronico">Meio Eletrônico / App Bancário</option><option value="televisao">Televisão / Propagandas</option><option value="telemarketing">Telefone / Telemarketing</option><option value="panfletagem">Mala Direta / Panfletagem</option></select></div>
+                        </div></div></div>
+                    </div>
+                </div>
+                <div class="panel-footer panel-footer-between mt-4">
+                    <button type="button" onclick="switchTab(2)" class="btn btn-light btn-lg shadow-sm sequence-btn-back"><i class="fa-solid fa-arrow-left me-2"></i> Anterior</button>
+                    <button type="button" onclick="switchTab(4)" class="btn btn-primary btn-lg px-4 shadow-sm sequence-btn">Credores <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                </div>
+            </div>
+
+            <!-- ABA 4 — CREDORES -->
+            <div id="tab-content-4" class="tab-content content-panel d-none">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <div><h2><i class="fa-solid fa-list-check"></i>Etapa 4: Mapa dos Credores</h2><p>Informe todas as dívidas e instituições financeiras.</p></div>
+                    <button type="button" onclick="adicionarCredor()" class="btn btn-secondary"><i class="fa-solid fa-plus"></i> Adicionar Credor</button>
+                </div>
+                <div class="panel-body">
+                    <div id="containerCredores" class="d-flex flex-column gap-3">
+                        <div class="credor-card">
+                            <div class="credor-header"><span class="credor-title"><i class="fa-solid fa-building-columns"></i> Credor #1</span></div>
+                            <div class="row g-2">
+                                <div class="col-md-6"><label class="form-label">Nome do Credor *</label><input type="text" value="Banco Alfa S.A." class="credor-nome form-control"></div>
+                                <div class="col-md-6"><label class="form-label">Valor da Dívida (R$) *</label><input type="number" value="25650" class="input-valor-divida form-control" oninput="calcularTotalDividas()"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 total-summary">
+                        <div><span class="total-summary-label">Montante Total das Dívidas</span><div class="total-summary-value">R$ <span id="lblTotalDividas">25.650,00</span></div></div>
+                        <i class="fa-solid fa-file-invoice-dollar fa-3x" style="opacity: 0.2;"></i>
+                    </div>
+                </div>
+                <div class="panel-footer panel-footer-between mt-4">
+                    <button type="button" onclick="switchTab(3)" class="btn btn-light btn-lg shadow-sm sequence-btn-back"><i class="fa-solid fa-arrow-left me-2"></i> Anterior</button>
+                    <button type="button" onclick="prepararRevisao(); switchTab(5)" class="btn btn-primary btn-lg px-4 shadow-sm sequence-btn" style="background-color: var(--tjrs-green); border-color: var(--tjrs-green);">Revisar Pedido <i class="fa-solid fa-check-double ms-2"></i></button>
+                </div>
+            </div>
+
+            <!-- ABA 5 — REVISAR E SUBMETER -->
+            <div id="tab-content-5" class="tab-content content-panel d-none">
+                <div class="panel-header"><h2><i class="fa-solid fa-check-double"></i>Etapa 5: Revisar e Submeter</h2><p>Confirme os dados antes de enviar sua solicitação.</p></div>
+                <div class="panel-body">
+                    <div class="row g-4">
+                        <div class="col-md-4"><div class="card-financeiro card-financeiro-income"><span class="finance-label">Renda Individual</span><span id="reviewRenda" class="finance-value income-value"><i class="fa-solid fa-arrow-up"></i> R$ 0,00</span></div></div>
+                        <div class="col-md-4"><div class="card-financeiro card-financeiro-deduction"><span class="finance-label">Despesas Mensais</span><span id="reviewDespesas" class="finance-value deduction-value"><i class="fa-solid fa-arrow-down"></i> R$ 0,00</span></div></div>
+                        <div class="col-md-4"><div class="card-financeiro card-financeiro-deduction"><span class="finance-label">Total em Dívidas</span><span id="reviewDividas" class="finance-value deduction-value"><i class="fa-solid fa-file-invoice-dollar"></i> R$ 0,00</span></div></div>
+                    </div>
+                    <div id="reviewCredores" class="d-flex flex-column gap-2 mt-4"></div>
+                    <div class="mt-4 consent-box"><div class="form-check"><input class="form-check-input" type="checkbox" id="consentimento" required><label class="form-check-label" for="consentimento">Declaro que as informações são verdadeiras e autorizo o tratamento dos dados para fins de conciliação.</label></div></div>
+                </div>
+                <div class="panel-footer panel-footer-between mt-4">
+                    <button type="button" onclick="switchTab(4)" class="btn btn-light btn-lg shadow-sm sequence-btn-back"><i class="fa-solid fa-arrow-left me-2"></i> Corrigir Dados</button>
+                    <button type="submit" id="btnSubmit" class="btn btn-success btn-lg px-5 shadow-sm sequence-btn"><i class="fa-solid fa-paper-plane me-2"></i> Submeter Pedido</button>
+                </div>
+            </div>
+        </form>
+
+        <div id="success-message" class="content-panel d-none"><div class="panel-body">
+            <i class="fa-solid fa-circle-check success-icon"></i>
+            <h2>Solicitação Submetida com Sucesso!</h2>
+            <p style="color: var(--app-text-secondary); margin-top: 0.5rem;">Seu protocolo de atendimento é:</p>
+            <div id="protocolo-gerado"></div>
+            <button type="button" onclick="location.reload()" class="mt-4 btn btn-primary"><i class="fa-solid fa-plus"></i> Nova Solicitação</button>
+        </div></div>
+    </main>
+
+    <footer class="text-center py-4 mt-4"><p style="font-size: 0.8rem; color: var(--app-text-secondary);">Poder Judiciário - Sistema Quitaí</p></footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('methisForm')) {
+                if (typeof calcularTotalDespesas === 'function') calcularTotalDespesas();
+                if (typeof calcularTotalDividas === 'function') calcularTotalDividas();
+            }
+        });
+    </script>
+</body>
+</html>
