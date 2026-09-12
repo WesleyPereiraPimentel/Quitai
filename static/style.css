@@ -5,9 +5,11 @@
 
 :root {
     /* Cores Primárias (Base TJES) */
-    --tjes-primary: #1685e5;
+    --tjes-primary: #1685E5;
     --tjes-secondary: #FBBE03;
     --tjes-accent-pink: #FF7797;
+    --tjrs-orange: #e90d0dac;
+
 
     /* Cores Semânticas e de Ação (Base TJRS) */
     --tjrs-green: #058E3F;
@@ -70,14 +72,28 @@ body {
    CABEÇALHO (HEADER)
    ========================================================================== */
 
-.hero-navbar {
+/* .hero-navbar {
     background: linear-gradient(135deg, var(--tjes-primary) 0%, var(--app-primary-dark) 100%);
     box-shadow: var(--app-shadow);
     color: var(--app-text-inverted);
+} */
+.hero-navbar.scrolled {
+    background-color: var(--tjrs-green);
+    backdrop-filter: blur(10px);
+    /* box-shadow: var(--app-shadow); */
+
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%235F8FC7' fill-opacity='0.6' d='M0,160L48,176C96,192,192,224,288,218.7C384,213,480,171,576,144C672,117,768,107,864,128C960,149,1056,203,1152,213.3C1248,224,1344,192,1392,176L1440,160L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z'%3E%3C/path%3E%3C/svg%3E"),
+
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23087F5B' d='M0,288L48,272C96,256,192,224,288,197.3C384,171,480,149,576,165.3C672,181,768,235,864,245.3C960,256,1056,224,1152,192C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
 }
 
-.hero-navbar.scrolled {
-    background-color: var(--tjes-secondary); /* #4D41C7 - Roxo TJES */
+/* .hero-navbar.scrolled {
+    background-color: var(--tjes-secondary); 
     backdrop-filter: blur(10px);
     box-shadow: var(--app-shadow);
     background-image:
@@ -86,7 +102,7 @@ body {
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
-}
+} */
 
 .hero-navbar .navbar {
     padding: 1rem 0;
@@ -429,7 +445,7 @@ body {
 
 /* Credor Card */
 .credor-card {
-    background-color: #f8fafc;
+    background-color: rgba(229, 22, 22, 0.2);
     border: 1px solid var(--app-border);
     padding: 1.5rem;
     border-radius: var(--app-border-radius);
@@ -444,7 +460,7 @@ body {
 }
 .credor-title {
     font-weight: 700;
-    color: var(--app-primary);
+    color: var(--app-danger);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -457,12 +473,13 @@ body {
     align-items: center;
     padding: 1rem 1.5rem;
     border-radius: var(--app-border-radius);
-    background-color: var(--app-primary);
+    background-color: var(--tjrs-orange);
     color: var(--app-text-inverted);
 }
 .total-summary-label {
     font-size: 0.875rem;
     opacity: 0.8;
+    
 }
 .total-summary-value {
     font-size: 1.75rem;

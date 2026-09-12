@@ -253,20 +253,38 @@ function abrirModalAnalise(protocolo) {
     // Agente 2 e 3
     const a2 = analise_ia.agente_2.dados;
     let processosHtml = `<p><strong>${a2.processos_encontrados_qtd} processos</strong> encontrados no CODEX para o CPF: ${a2.cpf_consultado}</p>
-                         <table class="table mt-2"><thead><tr><th>Processo</th><th>Credor</th><th>Objeto</th><th>Valor</th></tr></thead><tbody>`;
+                         <table class="table mt-2"><thead><tr><th>Processo</th><th>Credor</th><th>CNPJ</th><th>Objeto</th><th>Valor</th></tr></thead><tbody>`;
     a2.processos.forEach(p => {
-        processosHtml += `<tr><td>${p.numero_processo}</td><td>${p.credor}</td><td>${p.objeto_contrato}</td><td class="value-deduction">R$ ${p.valor_causa.toFixed(2)}</td></tr>`;
+        processosHtml += `
+    <tr>
+        <td>${p.numero_processo}</td>
+        <td>${p.credor}</td>
+        <td><small class="text-muted">${p.cnpj_credor || '-'}</small></td>
+        <td>${p.objeto_contrato}</td>
+        <td class="value-deduction">
+            R$ ${Number(p.valor_causa).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}
+        </td>
+    </tr>`;
     });
     processosHtml += `</tbody></table>`;
     document.getElementById('agente2-content').innerHTML = processosHtml;
 
     // Agente 4
     const a4 = analise_ia.agente_4.dados;
-    let precedentesHtml = `<table class="table"><thead><tr><th>Credor</th><th>Objeto</th><th>Desconto Médio</th><th>Parcelamento</th></tr></thead><tbody>`;
+    let precedentesHtml = `<div class="table-responsive"><table class="table" style="min-width: 600px;"><thead><tr><th>Credor</th><th>Objeto</th><th>Desconto Médio</th><th>Parcelamento</th><th>Referências</th></tr></thead><tbody>`;
     a4.precedentes_mapeados.forEach(p => {
-        precedentesHtml += `<tr><td>${p.credor}</td><td>${p.objeto}</td><td>${p.desconto_medio}</td><td>${p.parcelamento_max}</td></tr>`;
+        let refsHtml = '';
+        if (p.processos_referencia) {
+            p.processos_referencia.forEach(ref => {
+                refsHtml += `<span class="badge bg-primary me-1 mb-1" style="font-weight: normal;"><i class="fa-solid fa-tag"></i> ${ref}</span>`;
+            });
+        }
+        precedentesHtml += `<tr><td>${p.credor}<br><small class="text-muted">${p.cnpj_credor || ''}</small></td><td>${p.objeto}</td><td>${p.desconto_medio}</td><td>${p.parcelamento_max}</td><td>${refsHtml}</td></tr>`;
     });
-    precedentesHtml += `</tbody></table>`;
+    precedentesHtml += `</tbody></table></div>`;
     document.getElementById('agente4-content').innerHTML = precedentesHtml;
     
     // Agente 6
@@ -291,12 +309,33 @@ function fecharModalAnalise() {
     document.getElementById('modalAnalise').classList.add('d-none');
 }
 
+// Fechar modal ao clicar fora
+const modalAnalise = document.getElementById('modalAnalise');
+if (modalAnalise) {
+    modalAnalise.addEventListener('click', function(e) {
+        if (e.target === this) {
+            fecharModalAnalise();
+        }
+    });
+}
+
 
 /* =====================================================
    AÇÕES DO CONCILIADOR E CONSULTA
 ====================================================== */
 async function reprovarCidadao(protocolo) {
-    if (!confirm('Deseja realmente reprovar esta solicitação?')) return;
+    const { isConfirmed } = await Swal.fire({
+        title: 'Reprovar Solicitação?',
+        text: 'Tem certeza que deseja reprovar esta solicitação? Esta ação atualizará o status do cidadão.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fa-solid fa-xmark"></i> Sim, reprovar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!isConfirmed) return;
     
     try {
         const res = await fetch('/api/atualizar_status', {
@@ -309,20 +348,70 @@ async function reprovarCidadao(protocolo) {
             })
         });
         if (res.ok) {
-            alert('Cidadão reprovado com sucesso!');
+            await Swal.fire({
+                title: 'Sucesso!',
+                text: 'Cidadão reprovado!',
+                icon: 'success',
+                confirmButtonColor: '#0d6efd'
+            });
             location.reload();
         }
     } catch (e) {
         console.error(e);
-        alert('Erro ao reprovar.');
+        Swal.fire('Erro', 'Ocorreu um erro ao tentar reprovar a solicitação.', 'error');
     }
 }
 
 async function convocarCidadao(protocolo) {
-    if (!confirm('Deseja convocar o cidadão para uma audiência no CEJUSC?')) return;
-    
-    // Simula uma data
-    const dataAudiencia = "15/10/2026 às 14:00";
+    const { value: formValues, isConfirmed } = await Swal.fire({
+        title: 'Agendar Audiência',
+        html: `
+            <p class="text-muted">Preencha os detalhes para a audiência no CEJUSC. Isso aprovará a solicitação e convocará as partes.</p>
+            <div class="text-start mt-4">
+                <div class="row">
+                    <div class="col-6">
+                        <label for="swal-data" class="form-label fw-bold">Data <i class="fa-regular fa-calendar text-primary"></i></label>
+                        <input id="swal-data" type="date" class="form-control mb-3" style="border-radius: 8px;">
+                    </div>
+                    <div class="col-6">
+                        <label for="swal-hora" class="form-label fw-bold">Hora <i class="fa-regular fa-clock text-primary"></i></label>
+                        <input id="swal-hora" type="time" class="form-control mb-3" style="border-radius: 8px;">
+                    </div>
+                </div>
+                <label for="swal-sala" class="form-label fw-bold mt-2">Sala / Local <i class="fa-solid fa-location-dot text-primary"></i></label>
+                <select id="swal-sala" class="form-select" style="border-radius: 8px;">
+                    <option value="CEJUSC Vitória - Sala Virtual 1">CEJUSC Vitória - Sala Virtual 1</option>
+                    <option value="CEJUSC Vitória - Sala Presencial 2">CEJUSC Vitória - Sala Presencial 2</option>
+                    <option value="CEJUSC Vila Velha - Sala 3">CEJUSC Vila Velha - Sala 3</option>
+                    <option value="CEJUSC Cariacica - Sala 2">CEJUSC Cariacica - Sala 2</option>
+                </select>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fa-solid fa-calendar-check"></i> Agendar e Convocar',
+        cancelButtonText: 'Cancelar',
+        customClass: {
+            popup: 'rounded-4'
+        },
+        preConfirm: () => {
+            const dataVal = document.getElementById('swal-data').value;
+            const horaVal = document.getElementById('swal-hora').value;
+            const salaVal = document.getElementById('swal-sala').value;
+            if (!dataVal || !horaVal) {
+                Swal.showValidationMessage('Por favor, informe a data e hora da audiência.');
+                return false;
+            }
+            // Formatar data (yyyy-mm-dd) para (dd/mm/yyyy)
+            const [year, month, day] = dataVal.split('-');
+            const dataStr = `${day}/${month}/${year} às ${horaVal}`;
+            return { data: dataStr, sala: salaVal };
+        }
+    });
+
+    if (!isConfirmed) return;
     
     try {
         const res = await fetch('/api/atualizar_status', {
@@ -331,16 +420,22 @@ async function convocarCidadao(protocolo) {
             body: JSON.stringify({
                 protocolo: protocolo,
                 status: 'Cidadão Convocado',
-                detalhes: { data: dataAudiencia, local: 'CEJUSC Vitória - Sala Virtual 3' }
+                conciliador_id: window.currentConciliadorId || 'conciliador1',
+                detalhes: { data: formValues.data, local: formValues.sala }
             })
         });
         if (res.ok) {
-            alert('Cidadão convocado e notificado com sucesso!');
+            await Swal.fire({
+                title: 'Convocado!',
+                text: 'Cidadão convocado e notificado com sucesso!',
+                icon: 'success',
+                confirmButtonColor: '#0d6efd'
+            });
             location.reload();
         }
     } catch (e) {
         console.error(e);
-        alert('Erro ao convocar.');
+        Swal.fire('Erro', 'Ocorreu um erro ao tentar convocar o cidadão.', 'error');
     }
 }
 
@@ -417,6 +512,109 @@ async function consultarProtocolo() {
 }
 
 /* =====================================================
+   GERENCIAMENTO DA AGENDA E CONCILIADORES
+====================================================== */
+window.currentConciliadorId = 'conciliador1';
+
+function selecionarConciliador(id, nome) {
+    window.currentConciliadorId = id;
+    const txt = document.getElementById('currentConciliadorText');
+    if (txt) txt.innerText = nome;
+    renderizarAgenda();
+}
+
+function renderizarAgenda() {
+    const tbody = document.getElementById('agendaTbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (typeof MOCK_AUDIENCIAS === 'undefined') return;
+    
+    const audienciasDoConciliador = MOCK_AUDIENCIAS.filter(a => a.conciliador_id === window.currentConciliadorId);
+    
+    if (audienciasDoConciliador.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted p-4">Nenhuma audiência marcada para este conciliador.</td></tr>`;
+        return;
+    }
+    
+    audienciasDoConciliador.forEach(aud => {
+        let statusBadge = `<span class="badge bg-primary">Agendada</span>`;
+        if (aud.status === 'Realizada') statusBadge = `<span class="badge bg-success">Realizada</span>`;
+        else if (aud.status === 'Falta Devedor' || aud.status === 'Falta Credor') statusBadge = `<span class="badge bg-danger">${aud.status}</span>`;
+        
+        let logsText = aud.modificado_por ? `<div style="font-size: 0.75rem; color: #6c757d; margin-top: 4px;">Log: Atualizado por ${aud.modificado_por}</div>` : '';
+        
+        let acoes = `
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Ações
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item text-success" href="#" onclick="marcarAudiencia('${aud.id}', 'Realizada')"><i class="fa-solid fa-check"></i> Realizada com Acordo</a></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="marcarAudiencia('${aud.id}', 'Falta Devedor')"><i class="fa-solid fa-user-xmark"></i> Falta: Devedor</a></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="marcarAudiencia('${aud.id}', 'Falta Credor')"><i class="fa-solid fa-building-circle-xmark"></i> Falta: Credor</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-primary" href="#" onclick="marcarAudiencia('${aud.id}', 'Agendada')"><i class="fa-solid fa-clock-rotate-left"></i> Reverter para Agendada</a></li>
+                </ul>
+            </div>
+        `;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${aud.data}</td>
+            <td>${aud.sala}</td>
+            <td>${aud.devedor}</td>
+            <td>${aud.credor}</td>
+            <td>${statusBadge} ${logsText}</td>
+            <td>${acoes}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function marcarAudiencia(id, status) {
+    try {
+        const concLogado = document.getElementById('currentConciliadorText').innerText;
+        
+        const res = await fetch('/api/atualizar_audiencia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status, modificado_por: concLogado })
+        });
+        if (res.ok) {
+            // Atualiza o mock localmente para refletir imediatamente sem recarregar a página
+            const aud = MOCK_AUDIENCIAS.find(a => a.id === id);
+            if (aud) {
+                aud.status = status;
+                aud.modificado_por = concLogado;
+            }
+            renderizarAgenda();
+            
+            Swal.fire({
+                title: 'Agenda Atualizada',
+                text: 'Status da audiência alterado para: ' + status,
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Erro', 'Não foi possível atualizar a audiência.', 'error');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicializa a agenda caso o elemento exista
+    if (document.getElementById('agendaTbody') && typeof MOCK_CONCILIADORES !== 'undefined' && MOCK_CONCILIADORES.length > 0) {
+        selecionarConciliador(MOCK_CONCILIADORES[0].id, MOCK_CONCILIADORES[0].nome);
+    }
+});
+
+/* =====================================================
    UTILITÁRIOS E INICIALIZAÇÃO
 ====================================================== */
 function escapeHtml(text) {
@@ -449,7 +647,7 @@ async function buscarCEP(cep) {
                 if (bairro) endCompleto += `, Bairro ${bairro}`;
                 if (cid) endCompleto += `, ${cid}`;
                 
-                document.getElementById('endereco').value = endCompleto;
+                document.getElementById('endereco').value = endCompleto + " - CEP: " + cepLimpo;
             };
             
             document.getElementById('numero').addEventListener('input', consolidarEndereco);
@@ -479,3 +677,26 @@ if (document.getElementById('methisForm')) {
         calcularTotalDividas();
     });
 }
+    const checkboxOutros = document.getElementById('checkboxOutros');
+    const campoOutros = document.getElementById('campoOutros');
+    const inputOutros = document.getElementById('outros');
+
+    checkboxOutros.addEventListener('change', function () {
+        if (this.checked) {
+            // Mostra o campo
+            campoOutros.style.display = 'block';
+            // Torna obrigatório
+            inputOutros.required = true;
+
+            // Foca no input
+            inputOutros.focus();
+        } else {
+            // Esconde o campo
+            campoOutros.style.display = 'none';
+            // Torna obrigatório
+            inputOutros.required = false;
+
+            // Limpa o input
+            inputOutros.value = '';
+        }
+    });
